@@ -171,8 +171,8 @@ select{appearance:none;cursor:pointer}
         </div>
       </div>
       <div class="card">
-        <div class="ct">Distribuição de tasks da sprint</div>
-        <div id="d-tasks-breakdown"></div>
+        <div class="ct">Distribuição de bugs por BU (sprint + produção)</div>
+        <div id="d-bu-breakdown"></div>
       </div>
     </div>
 
@@ -257,7 +257,7 @@ select{appearance:none;cursor:pointer}
         </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th style="min-width:160px">BU / Produto</th><th style="min-width:140px">Funcionalidade</th><th style="min-width:110px">Responsável</th><th style="min-width:120px">Categoria</th><th style="min-width:100px">Criticidade</th><th style="min-width:110px">Status</th><th style="width:36px"></th></tr></thead>
+            <thead><tr><th style="min-width:160px">BU / Produto</th><th style="min-width:140px">Breve Descrição</th><th style="min-width:110px">Responsável</th><th style="min-width:120px">Categoria</th><th style="min-width:100px">Criticidade</th><th style="min-width:110px">Status</th><th style="width:36px"></th></tr></thead>
             <tbody id="sprint-bug-body"><tr><td colspan="7" style="padding:12px;font-size:13px;color:var(--text3)">Nenhum bug adicionado.</td></tr></tbody>
           </table>
         </div>
@@ -288,7 +288,7 @@ select{appearance:none;cursor:pointer}
         </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th style="min-width:160px">BU / Produto</th><th style="min-width:140px">Funcionalidade</th><th style="min-width:110px">Responsável</th><th style="min-width:120px">Categoria</th><th style="min-width:100px">Criticidade</th><th style="min-width:110px">Status</th><th style="width:36px"></th></tr></thead>
+            <thead><tr><th style="min-width:160px">BU / Produto</th><th style="min-width:140px">Breve Descrição</th><th style="min-width:110px">Responsável</th><th style="min-width:120px">Categoria</th><th style="min-width:100px">Criticidade</th><th style="min-width:110px">Status</th><th style="width:36px"></th></tr></thead>
             <tbody id="prod-bug-body"><tr><td colspan="7" style="padding:12px;font-size:13px;color:var(--text3)">Nenhum incidente adicionado.</td></tr></tbody>
           </table>
         </div>
@@ -348,9 +348,11 @@ select{appearance:none;cursor:pointer}
       <div class="card">
         <div class="ct">Prévia do relatório</div>
         <div class="expbox" id="preview-content"></div>
-        <div style="display:flex;gap:8px;margin-top:1rem">
+        <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
           <button class="btn btnp" onclick="copyReport()">📋 Copiar relatório</button>
           <button class="btn" onclick="window.print()">🖨️ Imprimir / PDF</button>
+          <button class="btn" onclick="saveJSON()" style="border-color:rgba(62,207,142,.4);color:var(--green)">💾 Salvar dados (.json)</button>
+          <button class="btn" onclick="loadJSON()" style="border-color:rgba(124,106,247,.4);color:var(--accent2)">📂 Carregar dados (.json)</button>
         </div>
       </div>
       <div class="ab"><button class="btn" onclick="goTo(8)">← Anterior</button></div>
@@ -368,7 +370,7 @@ var blockedRows = [];
 var riskRows = [];
 var improveRows = [];
 var CRIT_OPT = ['Crítico','Alto','Médio','Baixo'];
-var BUG_STATUS = ['Aberto','Corrigido','Em progresso','Reaberto',"Won't Fix"];
+var BUG_STATUS = ['Aberto','Corrigido','Cancelado'];
 var SEV_COLORS = {'Crítico':'#f87171','Alto':'#fb923c','Médio':'#fbbf24','Baixo':'#3ecf8e'};
 var dashSevChart = null;
 var dashCatChart = null;
@@ -429,8 +431,8 @@ function renderTaskCases() {
   var html = '';
   for (var i = 0; i < taskCases.length; i++) {
     var t = taskCases[i];
-    var optsStatus = '';
-    var statusList = ['Entregue','Transbordo'];
+    var optsStatus = '<option value=""' + (!t.status ? ' selected' : '') + '>— selecione —</option>';
+    var statusList = ['Backlog','Prioritized','Doing','Review','Validation','Deployment','Done'];
     for (var s = 0; s < statusList.length; s++) {
       optsStatus += '<option' + (t.status === statusList[s] ? ' selected' : '') + '>' + statusList[s] + '</option>';
     }
@@ -456,7 +458,7 @@ function updateCasesBadge() {
 }
 
 function addTaskCase() {
-  taskCases.push({name:'', cases:0, status:'Entregue'});
+  taskCases.push({name:'', cases:0, status:''});
   renderTaskCases();
 }
 
@@ -481,7 +483,7 @@ function makeBugRow(bug, i, prefix) {
   }
   var row = '<tr>';
   row += '<td><input type="text" value="' + esc(bug.bu) + '" placeholder="Ex: Mobile — GL Activation" data-p="' + prefix + '" data-i="' + i + '" data-f="bu" class="bug-txt" oninput="bugTxt(this)"></td>';
-  row += '<td><input type="text" value="' + esc(bug.func) + '" placeholder="Ex: Tela de login" data-p="' + prefix + '" data-i="' + i + '" data-f="func" class="bug-txt" oninput="bugTxt(this)"></td>';
+  row += '<td><input type="text" value="' + esc(bug.func) + '" placeholder="Breve descrição do bug" data-p="' + prefix + '" data-i="' + i + '" data-f="func" class="bug-txt" oninput="bugTxt(this)"></td>';
   row += '<td><input type="text" value="' + esc(bug.resp) + '" placeholder="Nome" data-p="' + prefix + '" data-i="' + i + '" data-f="resp" class="bug-txt" oninput="bugTxt(this)"></td>';
   row += '<td><input type="text" value="' + esc(bug.cat) + '" placeholder="Ex: Funcionalidade" data-p="' + prefix + '" data-i="' + i + '" data-f="cat" class="bug-txt" oninput="bugTxt(this)"></td>';
   row += '<td><select data-p="' + prefix + '" data-i="' + i + '" data-f="crit" class="bug-sel" onchange="bugSel(this)">' + optsCrit + '</select></td>';
@@ -619,9 +621,9 @@ function updateDash() {
   var pc = cntCrit(prodBugs,'Crítico'), pa = cntCrit(prodBugs,'Alto');
 
   var entregues = 0;
-  for (var i = 0; i < taskCases.length; i++) if (taskCases[i].status === 'Entregue') entregues++;
+  for (var i = 0; i < taskCases.length; i++) if (taskCases[i].status === 'Done') entregues++;
   var transbordo = blockedRows.length;
-  for (var i = 0; i < taskCases.length; i++) if (taskCases[i].status === 'Transbordo') transbordo++;
+  for (var i = 0; i < taskCases.length; i++) if (!taskCases[i].status || taskCases[i].status === 'Backlog') transbordo++;
 
   setTxt('d-tested', testedTasks);
   setTxt('d-tested-sub', 'de ' + totalTasks + ' planejadas');
@@ -710,24 +712,34 @@ function updateDash() {
     dashCatChart.update();
   }
 
-  // tasks breakdown bars
-  var brkEl = document.getElementById('d-tasks-breakdown');
-  if (brkEl) {
-    var total2 = entregues + transbordo || 1;
-    var pE = Math.round(entregues / total2 * 100);
-    var pT = 100 - pE;
-    brkEl.innerHTML =
-      '<div class="barrow">' +
-        '<span style="font-size:12px;color:var(--text2);width:110px;flex-shrink:0">Entregues</span>' +
-        '<div class="barbg"><div class="barfill" style="background:var(--green);width:' + pE + '%"></div></div>' +
-        '<span style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:var(--green);min-width:60px;text-align:right">' + entregues + ' <span style="font-size:10px;font-weight:400;color:var(--text3)">(' + pE + '%)</span></span>' +
-      '</div>' +
-      '<div class="barrow">' +
-        '<span style="font-size:12px;color:var(--text2);width:110px;flex-shrink:0">Transbordadas</span>' +
-        '<div class="barbg"><div class="barfill" style="background:var(--red);width:' + pT + '%"></div></div>' +
-        '<span style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:var(--red);min-width:60px;text-align:right">' + transbordo + ' <span style="font-size:10px;font-weight:400;color:var(--text3)">(' + pT + '%)</span></span>' +
-      '</div>' +
-      '<div style="margin-top:10px;font-size:11px;color:var(--text3)">Transbordadas = tasks com status "Transbordo" em Métricas + tasks registradas em Tasks não testadas / bloqueadas.</div>';
+  // bugs by BU breakdown
+  var buEl = document.getElementById('d-bu-breakdown');
+  if (buEl) {
+    var buMap = {};
+    var allBugs2 = sprintBugs.concat(prodBugs);
+    for (var i = 0; i < allBugs2.length; i++) {
+      var bk = (allBugs2[i].bu || '').trim() || 'Não especificado';
+      buMap[bk] = (buMap[bk] || 0) + 1;
+    }
+    var buKeys = Object.keys(buMap);
+    var buColors2 = ['#7c6af7','#60a5fa','#3ecf8e','#fb923c','#f87171','#fbbf24','#c084fc','#2dd4bf','#f472b6','#34d399'];
+    if (!buKeys.length) {
+      buEl.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum bug registrado ainda.</p>';
+    } else {
+      var buTotal = allBugs2.length || 1;
+      var bhtml = '';
+      for (var i = 0; i < buKeys.length; i++) {
+        var bPct = Math.round(buMap[buKeys[i]] / buTotal * 100);
+        var bColor = buColors2[i % buColors2.length];
+        bhtml +=
+          '<div class="barrow">' +
+            '<span style="font-size:12px;color:var(--text2);width:160px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(buKeys[i]) + '">' + esc(buKeys[i]) + '</span>' +
+            '<div class="barbg"><div class="barfill" style="background:' + bColor + ';width:' + bPct + '%"></div></div>' +
+            '<span style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:' + bColor + ';min-width:60px;text-align:right">' + buMap[buKeys[i]] + ' <span style="font-size:10px;font-weight:400;color:var(--text3)">(' + bPct + '%)</span></span>' +
+          '</div>';
+      }
+      buEl.innerHTML = bhtml;
+    }
   }
 }
 
@@ -741,8 +753,8 @@ function buildPreview() {
   var sf = cntStatus(sprintBugs,'Corrigido'), pf = cntStatus(prodBugs,'Corrigido');
   var entregues = 0, transbordo = blockedRows.length;
   for (var i = 0; i < taskCases.length; i++) {
-    if (taskCases[i].status === 'Entregue') entregues++;
-    else transbordo++;
+    if (taskCases[i].status === 'Done') entregues++;
+    else if (!taskCases[i].status || taskCases[i].status === 'Backlog') transbordo++;
   }
 
   var taskLines = '';
@@ -826,8 +838,123 @@ function copyReport() {
   });
 }
 
+/* ── SAVE / LOAD / LOCALSTORAGE ── */
+var LS_KEY = 'qa_review_data';
+
+function collectData() {
+  return {
+    sprintNum:      val('sprint-num'),
+    qaResp:         val('qa-resp'),
+    squad:          val('squad'),
+    dtPub:          val('dt-pub'),
+    dtInicio:       val('dt-inicio'),
+    dtFim:          val('dt-fim'),
+    execSummary:    val('exec-summary'),
+    totalTasks:     val('total-tasks'),
+    tasksTested:    val('tasks-tested'),
+    untestedReason: val('untested-reason'),
+    taskCases:      taskCases,
+    sprintBugs:     sprintBugs,
+    prodBugs:       prodBugs,
+    blockedRows:    blockedRows,
+    riskRows:       riskRows,
+    improveRows:    improveRows
+  };
+}
+
+function applyData(d) {
+  if (!d) return;
+  function setVal(id, v) { var e = document.getElementById(id); if (e && v !== undefined) e.value = v; }
+  setVal('sprint-num',     d.sprintNum);
+  setVal('qa-resp',        d.qaResp);
+  setVal('squad',          d.squad);
+  setVal('dt-pub',         d.dtPub);
+  setVal('dt-inicio',      d.dtInicio);
+  setVal('dt-fim',         d.dtFim);
+  setVal('exec-summary',   d.execSummary);
+  setVal('total-tasks',    d.totalTasks);
+  setVal('tasks-tested',   d.tasksTested);
+  setVal('untested-reason',d.untestedReason);
+  if (Array.isArray(d.taskCases))   taskCases   = d.taskCases;
+  if (Array.isArray(d.sprintBugs))  sprintBugs  = d.sprintBugs;
+  if (Array.isArray(d.prodBugs))    prodBugs    = d.prodBugs;
+  if (Array.isArray(d.blockedRows)) blockedRows = d.blockedRows;
+  if (Array.isArray(d.riskRows))    riskRows    = d.riskRows;
+  if (Array.isArray(d.improveRows)) improveRows = d.improveRows;
+  updateBar();
+  calcTasks();
+  updateBugCounts();
+  updateDash();
+}
+
+function autoSave() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(collectData())); } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (raw) applyData(JSON.parse(raw));
+  } catch(e) {}
+}
+
+function saveJSON() {
+  var data = JSON.stringify(collectData(), null, 2);
+  var blob = new Blob([data], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'qa-review-dados.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadJSON() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var d = JSON.parse(ev.target.result);
+        applyData(d);
+        autoSave();
+        showToast('✅ Dados carregados com sucesso!');
+      } catch(err) {
+        showToast('❌ Arquivo inválido.');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateY(0)';
+  setTimeout(function() {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(10px)';
+  }, 3000);
+}
+
+// Intercept all inputs to auto-save
+document.addEventListener('input',  function() { autoSave(); });
+document.addEventListener('change', function() { autoSave(); });
+
 updateBar();
+autoLoad();
 setTimeout(updateDash, 200);
 </script>
+
+<!-- Toast notification -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:#1e1e24;border:1px solid rgba(124,106,247,.4);color:#a89cf8;padding:10px 18px;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;box-shadow:0 4px 24px rgba(0,0,0,.4)"></div>
+</body>
+</html>
 </body>
 </html>
