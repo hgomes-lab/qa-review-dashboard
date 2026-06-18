@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QA Review</title>
+<title>QA Sprint Review</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -32,7 +33,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ni .sn{width:20px;height:20px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;flex-shrink:0;border:1px solid var(--border)}
 .ni.active .sn{background:var(--accent);border-color:var(--accent);color:#fff}
 .sep{height:1px;background:var(--border);margin:.75rem 0}
-.main{flex:1;padding:2.5rem 2rem;max-width:960px}
+.main{flex:1;padding:2.5rem 2rem;}
 .page{display:none}
 .page.active{display:block;animation:fi .2s ease}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -133,7 +134,7 @@ select{appearance:none;cursor:pointer}
     <button class="ni" id="nav4" onclick="goTo(4)"><span class="sn">4a</span> Bugs da sprint</button>
     <button class="ni" id="nav5" onclick="goTo(5)"><span class="sn">4b</span> Bugs em produção</button>
     <div class="sep"></div>
-    <button class="ni" id="nav6" onclick="goTo(6)"><span class="sn">5</span> Tasks não testadas</button>
+    <button class="ni" id="nav6" onclick="goTo(6)"><span class="sn">5</span> Tasks bloqueadas</button>
     <button class="ni" id="nav7" onclick="goTo(7)"><span class="sn">6</span> Riscos</button>
     <button class="ni" id="nav8" onclick="goTo(8)"><span class="sn">7</span> Melhorias</button>
     <div class="sep"></div>
@@ -146,15 +147,17 @@ select{appearance:none;cursor:pointer}
     <div class="page active" id="page0">
       <div class="ph"><h2>Dashboard</h2><p>Visão consolidada da qualidade da sprint</p></div>
       <div class="g4" style="margin-bottom:1rem">
-        <div class="dc cp"><div class="dl">Tasks testadas</div><div class="dv vp" id="d-tested">0</div><div class="ds" id="d-tested-sub">de 0 planejadas</div></div>
+        <div class="dc cg"><div class="dl">Total de tasks</div><div class="dv vg" id="d-total-tasks">0</div><div class="ds">na sprint</div></div>
         <div class="dc cb"><div class="dl">Casos de teste</div><div class="dv vb" id="d-cases">0</div><div class="ds">total executados</div></div>
         <div class="dc co"><div class="dl">Bugs da sprint</div><div class="dv vo" id="d-bsprint">0</div><div class="ds" id="d-bsprint-sub">— críticos / — altos</div></div>
         <div class="dc cr"><div class="dl">Bugs em produção</div><div class="dv vr" id="d-bprod">0</div><div class="ds" id="d-bprod-sub">— críticos / — altos</div></div>
       </div>
-      <div class="g3" style="margin-bottom:1rem">
-        <div class="dc cg"><div class="dl">Tasks entregues</div><div class="dv vg" id="d-entregues">0</div><div class="ds">concluídas na sprint</div></div>
-        <div class="dc cr"><div class="dl">Tasks transbordadas</div><div class="dv vr" id="d-transbordo">0</div><div class="ds">não testadas / bloqueadas</div></div>
-        <div class="dc ct2"><div class="dl">Cobertura de testes</div><div class="dv vt" id="d-coverage">0%</div><div class="ds" id="d-coverage-sub">tasks testadas / total</div></div>
+      <div class="g2" style="margin-bottom:1rem">
+        <div class="dc cr"><div class="dl">Tasks bloqueadas</div><div class="dv vr" id="d-blocked">0</div><div class="ds">não testadas na sprint</div></div>
+        <div class="card" style="margin-bottom:0">
+          <div class="ct">Resumo executivo</div>
+          <p id="d-exec-summary" style="font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap">—</p>
+        </div>
       </div>
       <div class="g2" style="margin-bottom:1rem">
         <div class="card" style="margin-bottom:0">
@@ -171,7 +174,7 @@ select{appearance:none;cursor:pointer}
         </div>
       </div>
       <div class="card">
-        <div class="ct">Distribuição de bugs por BU (sprint + produção)</div>
+        <div class="ct">Distribuição de bugs por task (sprint)</div>
         <div id="d-bu-breakdown"></div>
       </div>
     </div>
@@ -198,7 +201,7 @@ select{appearance:none;cursor:pointer}
       <div class="ph"><h2>Resumo executivo</h2><p>Panorama geral da qualidade da sprint</p></div>
       <div class="card">
         <div class="ct">Visão geral</div>
-        <div class="f"><label>Descreva o que foi entregue, o ciclo de testes e o estado geral de qualidade</label><textarea id="exec-summary" rows="6" placeholder="Ex: A Sprint 42 focou na entrega do módulo de pagamentos..."></textarea></div>
+        <div class="f"><label>Descreva o que foi entregue, o ciclo de testes e o estado geral de qualidade</label><textarea id="exec-summary" rows="6" placeholder="Ex: A Sprint 42 focou na entrega do módulo de pagamentos..." oninput="updateDash()"></textarea></div>
       </div>
       <div class="ab">
         <button class="btn" onclick="goTo(1)">← Anterior</button>
@@ -208,28 +211,12 @@ select{appearance:none;cursor:pointer}
 
     <!-- PAGE 3 -->
     <div class="page" id="page3">
-      <div class="ph"><h2>Métricas de testes</h2><p>Tasks e casos de teste da sprint</p></div>
-      <div class="card">
-        <div class="ct">Total de tasks</div>
-        <div class="g2" style="margin-bottom:1rem">
-          <div class="f"><label>Total de tasks planejadas</label><input type="number" id="total-tasks" min="0" value="0" oninput="calcTasks()"></div>
-          <div class="f"><label>Tasks testadas</label><input type="number" id="tasks-tested" min="0" value="0" oninput="calcTasks()"></div>
-        </div>
-        <div class="info-row">
-          <span>Tasks não testadas: <strong style="color:var(--red);font-family:'DM Mono',monospace" id="tasks-untested-auto">0</strong> <span style="color:var(--text3);font-size:11px">(calculado automaticamente)</span></span>
-        </div>
-        <div class="f" style="margin-top:1rem"><label>Justificativa por tasks não testadas</label><input type="text" id="untested-reason" placeholder="Ex: Dependência de ambiente, bloqueio de integração..."></div>
-      </div>
+      <div class="ph"><h2>Métricas de testes</h2><p>Casos de teste da sprint por task</p></div>
       <div class="card">
         <div class="ct">Casos de teste por task</div>
         <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Adicione as tasks e a quantidade de casos. O total atualiza automaticamente.</p>
-        <div style="margin-bottom:1rem"><div class="tb"><span>Total de casos de teste:</span><span class="tbn" id="total-cases-badge">0</span></div></div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th style="min-width:200px">Nome da task</th><th style="min-width:110px;text-align:center">Qtd. de casos</th><th style="min-width:130px">Status da task</th><th style="width:36px"></th></tr></thead>
-            <tbody id="task-cases-body"><tr><td colspan="4" style="padding:12px;font-size:13px;color:var(--text3)">Nenhuma task adicionada ainda.</td></tr></tbody>
-          </table>
-        </div>
+        <div style="margin-bottom:1.25rem"><div class="tb"><span>Total de casos de teste:</span><span class="tbn" id="total-cases-badge">0</span></div></div>
+        <div id="task-cases-body"><p style="font-size:13px;color:var(--text3)">Nenhuma task adicionada ainda.</p></div>
         <button class="btn btns" style="margin-top:10px" onclick="addTaskCase()">+ Adicionar task</button>
       </div>
       <div class="ab">
@@ -255,12 +242,7 @@ select{appearance:none;cursor:pointer}
           </div>
           <div class="fixed-row">Corrigidos: <span style="color:var(--green);font-family:'DM Mono',monospace;font-size:16px;font-weight:700" id="sc-fixed">0</span> <span style="color:var(--text3);font-size:11px">(automático)</span></div>
         </div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th style="min-width:160px">BU / Produto</th><th style="min-width:140px">Breve Descrição</th><th style="min-width:110px">Responsável</th><th style="min-width:120px">Categoria</th><th style="min-width:100px">Criticidade</th><th style="min-width:110px">Status</th><th style="width:36px"></th></tr></thead>
-            <tbody id="sprint-bug-body"><tr><td colspan="7" style="padding:12px;font-size:13px;color:var(--text3)">Nenhum bug adicionado.</td></tr></tbody>
-          </table>
-        </div>
+        <div id="sprint-bug-body"><p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum bug adicionado.</p></div>
         <button class="btn btns" style="margin-top:10px" onclick="addSprintBug()">+ Adicionar bug</button>
       </div>
       <div class="ab">
@@ -286,12 +268,7 @@ select{appearance:none;cursor:pointer}
           </div>
           <div class="fixed-row">Corrigidos: <span style="color:var(--green);font-family:'DM Mono',monospace;font-size:16px;font-weight:700" id="pc-fixed">0</span> <span style="color:var(--text3);font-size:11px">(automático)</span></div>
         </div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr><th style="min-width:160px">BU / Produto</th><th style="min-width:140px">Breve Descrição</th><th style="min-width:110px">Responsável</th><th style="min-width:120px">Categoria</th><th style="min-width:100px">Criticidade</th><th style="min-width:110px">Status</th><th style="width:36px"></th></tr></thead>
-            <tbody id="prod-bug-body"><tr><td colspan="7" style="padding:12px;font-size:13px;color:var(--text3)">Nenhum incidente adicionado.</td></tr></tbody>
-          </table>
-        </div>
+        <div id="prod-bug-body"><p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum incidente adicionado.</p></div>
         <button class="btn btns" style="margin-top:10px" onclick="addProdBug()">+ Adicionar incidente</button>
       </div>
       <div class="ab">
@@ -302,7 +279,7 @@ select{appearance:none;cursor:pointer}
 
     <!-- PAGE 6 -->
     <div class="page" id="page6">
-      <div class="ph"><h2>Tasks não testadas / bloqueadas</h2><p>Registros aqui alimentam o indicador de transbordamento no dashboard.</p></div>
+      <div class="ph"><h2>Tasks bloqueadas</h2><p>Tasks que não foram testadas ou ficaram bloqueadas durante a sprint</p></div>
       <div class="card">
         <div class="ct">Registro de bloqueios</div>
         <div id="blocked-list"><p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhuma task registrada.</p></div>
@@ -406,15 +383,6 @@ function num(id) { return parseFloat(val(id)) || 0; }
 function setTxt(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function calcTasks() {
-  var total = num('total-tasks');
-  var tested = num('tasks-tested');
-  var untested = total - tested;
-  if (untested < 0) untested = 0;
-  setTxt('tasks-untested-auto', untested);
-  updateDash();
-}
-
 function getTotalCases() {
   var t = 0;
   for (var i = 0; i < taskCases.length; i++) t += parseInt(taskCases[i].cases) || 0;
@@ -422,32 +390,72 @@ function getTotalCases() {
 }
 
 function renderTaskCases() {
-  var tbody = document.getElementById('task-cases-body');
-  if (!tbody) return;
+  var el = document.getElementById('task-cases-body');
+  if (!el) return;
   if (!taskCases.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:12px;font-size:13px;color:var(--text3)">Nenhuma task adicionada ainda.</td></tr>';
+    el.innerHTML = '<p style="font-size:13px;color:var(--text3)">Nenhuma task adicionada ainda.</p>';
     updateCasesBadge(); return;
   }
+  var criteriaOpts = ['Sim','Parcialmente','Não'];
+  var statusList = ['Backlog','Prioritized','Doing','Review','Validation','Deployment','Done'];
+  var statusColors = {Backlog:'#9898a8',Prioritized:'#60a5fa',Doing:'#4da6ff',Review:'#c49b0a',Validation:'#00c2a8',Deployment:'#7c6af7',Done:'#3ecf8e'};
+  var criteriaColors = {Sim:'var(--green)',Parcialmente:'var(--amber)',Não:'var(--red)'};
   var html = '';
   for (var i = 0; i < taskCases.length; i++) {
     var t = taskCases[i];
-    var optsStatus = '<option value=""' + (!t.status ? ' selected' : '') + '>— selecione —</option>';
-    var statusList = ['Backlog','Prioritized','Doing','Review','Validation','Deployment','Done'];
-    for (var s = 0; s < statusList.length; s++) {
+    var optsStatus = '<option value=""' + (!t.status ? ' selected' : '') + '>— status —</option>';
+    for (var s = 0; s < statusList.length; s++)
       optsStatus += '<option' + (t.status === statusList[s] ? ' selected' : '') + '>' + statusList[s] + '</option>';
-    }
-    html += '<tr>';
-    html += '<td><input type="text" value="' + esc(t.name) + '" placeholder="Nome da task / US" data-i="' + i + '" data-f="name" class="tc-name" oninput="tcUpdate(this)"></td>';
-    html += '<td style="text-align:center"><input type="number" min="0" value="' + (t.cases||0) + '" style="font-family:DM Mono,monospace;text-align:center;max-width:80px;margin:0 auto;display:block" data-i="' + i + '" class="tc-cases" oninput="tcCases(this)"></td>';
-    html += '<td><select data-i="' + i + '" class="tc-status" onchange="tcStatus(this)">' + optsStatus + '</select></td>';
-    html += '<td><button class="btn btnd" data-i="' + i + '" onclick="removeTask(this)">✕</button></td>';
-    html += '</tr>';
+    var optsCrit = '<option value=""' + (!t.criteria ? ' selected' : '') + '>— selecione —</option>';
+    for (var c = 0; c < criteriaOpts.length; c++)
+      optsCrit += '<option' + (t.criteria === criteriaOpts[c] ? ' selected' : '') + '>' + criteriaOpts[c] + '</option>';
+    var showObs = (t.criteria === 'Parcialmente' || t.criteria === 'Não');
+    var statusColor = statusColors[t.status] || 'var(--text2)';
+    var critColor = criteriaColors[t.criteria] || 'var(--text3)';
+    var linkBtn = t.link ? '<a href="' + esc(t.link) + '" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:var(--accent2);text-decoration:none;font-size:14px;flex-shrink:0" title="Abrir no ClickUp">↗</a>' : '<span style="width:32px;height:32px;flex-shrink:0"></span>';
+    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:10px">';
+    // Row 1: name + link field + link btn + cases + status + delete
+    html += '<div style="display:grid;grid-template-columns:1fr 280px 32px 90px 160px 36px;gap:8px;align-items:end;margin-bottom:10px">';
+    html += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Nome da task</label><input type="text" value="' + esc(t.name) + '" placeholder="Nome da task / US" data-i="' + i + '" data-f="name" oninput="tcUpdate(this)" style="width:100%"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Link ClickUp</label><input type="text" value="' + esc(t.link||'') + '" placeholder="https://app.clickup.com/..." data-i="' + i + '" data-f="link" oninput="tcUpdate(this)" style="width:100%;font-size:12px"></div>';
+    html += '<div style="padding-bottom:2px">' + linkBtn + '</div>';
+    html += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Qtd. casos</label><input type="number" min="0" value="' + (t.cases||0) + '" style="font-family:DM Mono,monospace;text-align:center;width:100%" data-i="' + i + '" oninput="tcCases(this)"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Status</label><select data-i="' + i + '" onchange="tcStatus(this)" style="color:' + statusColor + ';width:100%">' + optsStatus + '</select></div>';
+    html += '<div style="padding-bottom:2px"><button class="btn btnd" data-i="' + i + '" onclick="removeTask(this)">✕</button></div>';
+    html += '</div>';
+    // Row 2: criteria + obs
+    html += '<div style="display:grid;grid-template-columns:200px 1fr;gap:8px">';
+    html += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Critérios de aceite</label><select data-i="' + i + '" onchange="tcCriteria(this)" style="color:' + critColor + ';width:100%">' + optsCrit + '</select></div>';
+    html += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Observação</label><input type="text" value="' + esc(t.criteriaObs||'') + '" placeholder="' + (showObs ? 'Detalhe o que não foi validado...' : '—') + '" data-i="' + i + '" data-f="criteriaObs" oninput="tcUpdate(this)" ' + (!showObs ? 'disabled style="opacity:.3;width:100%"' : 'style="width:100%"') + '></div>';
+    html += '</div>';
+    html += '</div>';
   }
-  tbody.innerHTML = html;
+  el.innerHTML = html;
   updateCasesBadge();
 }
 
-function tcUpdate(el) { taskCases[el.dataset.i].name = el.value; }
+function tcCriteria(el) {
+  taskCases[el.dataset.i].criteria = el.value;
+  renderTaskCases();
+}
+
+function tcUpdate(el) {
+  taskCases[el.dataset.i][el.dataset.f] = el.value;
+  if (el.dataset.f === 'link') renderTaskCases();
+}
+function renderBugLink(el) {
+  var arr = el.dataset.p === 'sprint' ? sprintBugs : prodBugs;
+  arr[el.dataset.i].link = el.value;
+  var card = el.closest('[data-card-type]') || el.parentNode.parentNode.parentNode;
+  var links = card.querySelectorAll('a[title="Abrir no ClickUp"], span[data-link-placeholder]');
+  // re-render only the link button
+  var linkDiv = el.parentNode.nextElementSibling;
+  if (linkDiv) {
+    linkDiv.innerHTML = el.value
+      ? '<a href="' + el.value + '" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:var(--accent2);text-decoration:none;font-size:14px;flex-shrink:0" title="Abrir no ClickUp">↗</a>'
+      : '<span style="width:32px;height:32px;flex-shrink:0"></span>';
+  }
+}
 function tcCases(el) { taskCases[el.dataset.i].cases = el.value; updateCasesBadge(); }
 function tcStatus(el) { taskCases[el.dataset.i].status = el.value; updateCasesBadge(); }
 function removeTask(el) { taskCases.splice(el.dataset.i, 1); renderTaskCases(); }
@@ -458,7 +466,7 @@ function updateCasesBadge() {
 }
 
 function addTaskCase() {
-  taskCases.push({name:'', cases:0, status:''});
+  taskCases.push({name:'', link:'', cases:0, status:'', criteria:'', criteriaObs:''});
   renderTaskCases();
 }
 
@@ -473,25 +481,75 @@ function cntStatus(arr, s) {
   return n;
 }
 
-function makeBugRow(bug, i, prefix) {
+function makeBugCard(bug, i, prefix) {
   var optsCrit = '', optsStatus = '';
-  for (var c = 0; c < CRIT_OPT.length; c++) {
+  var critColors = {'Crítico':'var(--red)','Alto':'var(--orange)','Médio':'var(--amber)','Baixo':'var(--green)'};
+  var statusColors2 = {'Aberto':'#60a5fa','Corrigido':'#3ecf8e','Cancelado':'#f0eff4'};
+  for (var c = 0; c < CRIT_OPT.length; c++)
     optsCrit += '<option' + (bug.crit === CRIT_OPT[c] ? ' selected' : '') + '>' + CRIT_OPT[c] + '</option>';
-  }
-  for (var s = 0; s < BUG_STATUS.length; s++) {
+  for (var s = 0; s < BUG_STATUS.length; s++)
     optsStatus += '<option' + (bug.status === BUG_STATUS[s] ? ' selected' : '') + '>' + BUG_STATUS[s] + '</option>';
+  var critColor = critColors[bug.crit] || 'var(--text2)';
+  var statusColor2 = statusColors2[bug.status] || 'var(--text2)';
+  var linkBtn = bug.link ? '<a href="' + esc(bug.link) + '" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:var(--accent2);text-decoration:none;font-size:14px;flex-shrink:0" title="Abrir no ClickUp">↗</a>' : '<span style="width:32px;height:32px;flex-shrink:0"></span>';
+  var card = '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:10px">';
+  // Row 1: BU + Breve Descrição + Link field + link btn + delete
+  card += '<div style="display:grid;grid-template-columns:220px 1fr 260px 32px 36px;gap:8px;align-items:end;margin-bottom:10px">';
+  card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">BU / Produto</label><input type="text" value="' + esc(bug.bu) + '" placeholder="Ex: Mobile — GL Activation" data-p="' + prefix + '" data-i="' + i + '" data-f="bu" oninput="bugTxt(this)" style="width:100%"></div>';
+  card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Breve Descrição</label><input type="text" value="' + esc(bug.func) + '" placeholder="Descreva o bug" data-p="' + prefix + '" data-i="' + i + '" data-f="func" oninput="bugTxt(this)" style="width:100%"></div>';
+  card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Link ClickUp</label><input type="text" value="' + esc(bug.link||'') + '" placeholder="https://app.clickup.com/..." data-p="' + prefix + '" data-i="' + i + '" data-f="link" oninput="bugTxt(this);renderBugLink(this)" style="width:100%;font-size:12px"></div>';
+  card += '<div style="padding-bottom:2px">' + linkBtn + '</div>';
+  card += '<div style="padding-bottom:2px"><button class="btn btnd" data-p="' + prefix + '" data-i="' + i + '" onclick="removeBug(this)">✕</button></div>';
+  card += '</div>';
+  // Row 2: Responsável + Categoria + Criticidade + Status
+  card += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 160px 160px;gap:8px">';
+  card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Responsável</label><input type="text" value="' + esc(bug.resp) + '" placeholder="Nome" data-p="' + prefix + '" data-i="' + i + '" data-f="resp" oninput="bugTxt(this)" style="width:100%"></div>';
+  // Task correspondente — apenas bugs da sprint
+  if (prefix === 'sprint') {
+    var optsTask = '<option value=""' + (!bug.taskRef ? ' selected' : '') + '>— selecione a task —</option>';
+    for (var t = 0; t < taskCases.length; t++) {
+      var tn = taskCases[t].name || ('Task ' + (t+1));
+      optsTask += '<option value="' + esc(tn) + '"' + (bug.taskRef === tn ? ' selected' : '') + '>' + esc(tn) + '</option>';
+    }
+    card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Task correspondente</label><select data-p="' + prefix + '" data-i="' + i + '" data-f="taskRef" onchange="bugSel(this);updateDash()" style="width:100%">' + optsTask + '</select></div>';
+  } else {
+    card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Categoria</label><input type="text" value="' + esc(bug.cat) + '" placeholder="Ex: Funcionalidade" data-p="' + prefix + '" data-i="' + i + '" data-f="cat" oninput="bugTxt(this)" style="width:100%"></div>';
   }
-  var row = '<tr>';
-  row += '<td><input type="text" value="' + esc(bug.bu) + '" placeholder="Ex: Mobile — GL Activation" data-p="' + prefix + '" data-i="' + i + '" data-f="bu" class="bug-txt" oninput="bugTxt(this)"></td>';
-  row += '<td><input type="text" value="' + esc(bug.func) + '" placeholder="Breve descrição do bug" data-p="' + prefix + '" data-i="' + i + '" data-f="func" class="bug-txt" oninput="bugTxt(this)"></td>';
-  row += '<td><input type="text" value="' + esc(bug.resp) + '" placeholder="Nome" data-p="' + prefix + '" data-i="' + i + '" data-f="resp" class="bug-txt" oninput="bugTxt(this)"></td>';
-  row += '<td><input type="text" value="' + esc(bug.cat) + '" placeholder="Ex: Funcionalidade" data-p="' + prefix + '" data-i="' + i + '" data-f="cat" class="bug-txt" oninput="bugTxt(this)"></td>';
-  row += '<td><select data-p="' + prefix + '" data-i="' + i + '" data-f="crit" class="bug-sel" onchange="bugSel(this)">' + optsCrit + '</select></td>';
-  row += '<td><select data-p="' + prefix + '" data-i="' + i + '" data-f="status" class="bug-sel" onchange="bugSel(this)">' + optsStatus + '</select></td>';
-  row += '<td><button class="btn btnd" data-p="' + prefix + '" data-i="' + i + '" onclick="removeBug(this)">✕</button></td>';
-  row += '</tr>';
-  return row;
+  if (prefix === 'sprint') {
+    card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Categoria</label><input type="text" value="' + esc(bug.cat) + '" placeholder="Ex: Funcionalidade" data-p="' + prefix + '" data-i="' + i + '" data-f="cat" oninput="bugTxt(this)" style="width:100%"></div>';
+  }
+  card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Criticidade</label><select data-p="' + prefix + '" data-i="' + i + '" data-f="crit" onchange="bugSel(this)" style="color:' + critColor + ';width:100%">' + optsCrit + '</select></div>';
+  card += '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Status</label><select data-p="' + prefix + '" data-i="' + i + '" data-f="status" onchange="bugSel(this)" style="color:' + statusColor2 + ';width:100%">' + optsStatus + '</select></div>';
+  card += '</div>';
+  if (bug.status === 'Cancelado') {
+    card += '<div style="margin-top:8px"><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px">Motivo do cancelamento</label><input type="text" value="' + esc(bug.cancelReason||'') + '" placeholder="Descreva o motivo do cancelamento..." data-p="' + prefix + '" data-i="' + i + '" data-f="cancelReason" oninput="bugTxt(this)" style="width:100%"></div>';
+  }
+  card += '</div>';
+  return card;
 }
+
+function renderSprintBugs() {
+  var el = document.getElementById('sprint-bug-body');
+  if (!el) return;
+  if (!sprintBugs.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum bug adicionado.</p>'; updateBugCounts(); return; }
+  var html = '';
+  for (var i = 0; i < sprintBugs.length; i++) html += makeBugCard(sprintBugs[i], i, 'sprint');
+  el.innerHTML = html;
+  updateBugCounts();
+}
+
+function renderProdBugs() {
+  var el = document.getElementById('prod-bug-body');
+  if (!el) return;
+  if (!prodBugs.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum incidente adicionado.</p>'; updateBugCounts(); return; }
+  var html = '';
+  for (var i = 0; i < prodBugs.length; i++) html += makeBugCard(prodBugs[i], i, 'prod');
+  el.innerHTML = html;
+  updateBugCounts();
+}
+
+function addSprintBug() { sprintBugs.push({bu:'',func:'',link:'',resp:'',taskRef:'',cat:'',crit:'Alto',status:'Aberto',cancelReason:''}); renderSprintBugs(); }
+function addProdBug()   { prodBugs.push({bu:'',func:'',link:'',resp:'',cat:'',crit:'Crítico',status:'Aberto',cancelReason:''}); renderProdBugs(); }
 
 function bugTxt(el) {
   var arr = el.dataset.p === 'sprint' ? sprintBugs : prodBugs;
@@ -502,34 +560,15 @@ function bugSel(el) {
   var arr = el.dataset.p === 'sprint' ? sprintBugs : prodBugs;
   arr[el.dataset.i][el.dataset.f] = el.value;
   updateBugCounts();
+  if (el.dataset.f === 'taskRef') updateDash();
+  if (el.dataset.f === 'status') {
+    if (el.dataset.p === 'sprint') renderSprintBugs(); else renderProdBugs();
+  }
 }
 function removeBug(el) {
   if (el.dataset.p === 'sprint') { sprintBugs.splice(el.dataset.i, 1); renderSprintBugs(); }
   else { prodBugs.splice(el.dataset.i, 1); renderProdBugs(); }
 }
-
-function renderSprintBugs() {
-  var tbody = document.getElementById('sprint-bug-body');
-  if (!tbody) return;
-  if (!sprintBugs.length) { tbody.innerHTML = '<tr><td colspan="7" style="padding:12px;font-size:13px;color:var(--text3)">Nenhum bug adicionado.</td></tr>'; updateBugCounts(); return; }
-  var html = '';
-  for (var i = 0; i < sprintBugs.length; i++) html += makeBugRow(sprintBugs[i], i, 'sprint');
-  tbody.innerHTML = html;
-  updateBugCounts();
-}
-
-function renderProdBugs() {
-  var tbody = document.getElementById('prod-bug-body');
-  if (!tbody) return;
-  if (!prodBugs.length) { tbody.innerHTML = '<tr><td colspan="7" style="padding:12px;font-size:13px;color:var(--text3)">Nenhum incidente adicionado.</td></tr>'; updateBugCounts(); return; }
-  var html = '';
-  for (var i = 0; i < prodBugs.length; i++) html += makeBugRow(prodBugs[i], i, 'prod');
-  tbody.innerHTML = html;
-  updateBugCounts();
-}
-
-function addSprintBug() { sprintBugs.push({bu:'',func:'',resp:'',cat:'',crit:'Alto',status:'Aberto'}); renderSprintBugs(); }
-function addProdBug()   { prodBugs.push({bu:'',func:'',resp:'',cat:'',crit:'Crítico',status:'Aberto'}); renderProdBugs(); }
 
 function updateBugCounts() {
   var st = sprintBugs.length;
@@ -579,6 +618,38 @@ function blRisco(el) { blockedRows[el.dataset.i].risco = el.dataset.v; renderBlo
 function removeBlocked(el) { blockedRows.splice(el.dataset.i, 1); renderBlockedList(); }
 function addBlockedRow() { blockedRows.push({item:'',motivo:'',risco:''}); renderBlockedList(); }
 
+function renderBlockedList() {
+  var el = document.getElementById('blocked-list');
+  if (!el) return;
+  if (!blockedRows.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhuma task registrada.</p>'; updateDash(); return; }
+  var html = '';
+  for (var i = 0; i < blockedRows.length; i++) {
+    var r = blockedRows[i];
+    var linkBtn = r.link ? '<a href="' + esc(r.link) + '" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);color:var(--accent2);text-decoration:none;font-size:14px;flex-shrink:0" title="Abrir no ClickUp">↗</a>' : '<span style="width:32px;height:32px;flex-shrink:0;display:inline-block"></span>';
+    html += '<div class="blocked-item">';
+    html += '<div style="display:grid;grid-template-columns:1fr 260px 32px;gap:8px;align-items:end;margin-bottom:10px">';
+    html += '<div><label>Nome da task</label><input type="text" value="' + esc(r.item||'') + '" placeholder="Nome da task" data-i="' + i + '" data-f="item" oninput="blTxt(this)"></div>';
+    html += '<div><label>Link ClickUp</label><input type="text" value="' + esc(r.link||'') + '" placeholder="https://app.clickup.com/..." data-i="' + i + '" data-f="link" oninput="blTxt(this)" style="font-size:12px"></div>';
+    html += '<div style="padding-bottom:2px">' + linkBtn + '</div>';
+    html += '</div>';
+    html += '<div style="margin-bottom:10px"><label>Motivo do bloqueio</label><input type="text" value="' + esc(r.motivo||'') + '" placeholder="Ex: Ambiente indisponível" data-i="' + i + '" data-f="motivo" oninput="blTxt(this)"></div>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between">';
+    html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--text2)">Risco:</span>';
+    html += '<button class="rb' + (r.risco==='Alto'?' ra':'') + '" data-i="' + i + '" data-v="Alto" onclick="blRisco(this)">Alto</button>';
+    html += '<button class="rb' + (r.risco==='Médio'?' rm':'') + '" data-i="' + i + '" data-v="Médio" onclick="blRisco(this)">Médio</button>';
+    html += '<button class="rb' + (r.risco==='Baixo'?' rl':'') + '" data-i="' + i + '" data-v="Baixo" onclick="blRisco(this)">Baixo</button>';
+    html += '</div>';
+    html += '<button class="btn btnd" data-i="' + i + '" onclick="removeBlocked(this)">✕</button>';
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+  updateDash();
+}
+function blTxt(el) { blockedRows[el.dataset.i][el.dataset.f] = el.value; }
+function blRisco(el) { blockedRows[el.dataset.i].risco = el.dataset.v; renderBlockedList(); }
+function removeBlocked(el) { blockedRows.splice(el.dataset.i, 1); renderBlockedList(); }
+function addBlockedRow() { blockedRows.push({item:'',link:'',motivo:'',risco:''}); renderBlockedList(); }
+
 function renderRiskList() {
   var el = document.getElementById('risks-list');
   if (!el) return;
@@ -612,30 +683,20 @@ function removeImprove(el) { improveRows.splice(el.dataset.i, 1); renderImproveL
 function addImprovement() { improveRows.push(''); renderImproveList(); }
 
 function updateDash() {
-  var totalTasks = num('total-tasks');
-  var testedTasks = num('tasks-tested');
-  var pct = totalTasks > 0 ? Math.round(testedTasks / totalTasks * 100) : 0;
   var totalCases = getTotalCases();
   var st = sprintBugs.length, pt = prodBugs.length;
   var sc = cntCrit(sprintBugs,'Crítico'), sa = cntCrit(sprintBugs,'Alto');
   var pc = cntCrit(prodBugs,'Crítico'), pa = cntCrit(prodBugs,'Alto');
 
-  var entregues = 0;
-  for (var i = 0; i < taskCases.length; i++) if (taskCases[i].status === 'Done') entregues++;
-  var transbordo = blockedRows.length;
-  for (var i = 0; i < taskCases.length; i++) if (!taskCases[i].status || taskCases[i].status === 'Backlog') transbordo++;
-
-  setTxt('d-tested', testedTasks);
-  setTxt('d-tested-sub', 'de ' + totalTasks + ' planejadas');
+  setTxt('d-total-tasks', taskCases.length);
   setTxt('d-cases', totalCases);
   setTxt('d-bsprint', st);
   setTxt('d-bsprint-sub', sc + ' críticos / ' + sa + ' altos');
   setTxt('d-bprod', pt);
   setTxt('d-bprod-sub', pc + ' críticos / ' + pa + ' altos');
-  setTxt('d-entregues', entregues);
-  setTxt('d-transbordo', transbordo);
-  setTxt('d-coverage', pct + '%');
-  setTxt('d-coverage-sub', testedTasks + ' testadas de ' + totalTasks);
+  setTxt('d-blocked', blockedRows.length);
+  var execEl = document.getElementById('d-exec-summary');
+  if (execEl) execEl.textContent = val('exec-summary') || '—';
 
   // combined bugs for charts
   var allBugs = sprintBugs.concat(prodBugs);
@@ -712,30 +773,29 @@ function updateDash() {
     dashCatChart.update();
   }
 
-  // bugs by BU breakdown
+  // bugs by task breakdown (sprint only, tasks with bugs only)
   var buEl = document.getElementById('d-bu-breakdown');
   if (buEl) {
-    var buMap = {};
-    var allBugs2 = sprintBugs.concat(prodBugs);
-    for (var i = 0; i < allBugs2.length; i++) {
-      var bk = (allBugs2[i].bu || '').trim() || 'Não especificado';
-      buMap[bk] = (buMap[bk] || 0) + 1;
+    var taskMap = {};
+    for (var i = 0; i < sprintBugs.length; i++) {
+      var tk = (sprintBugs[i].taskRef || '').trim();
+      if (tk) { taskMap[tk] = (taskMap[tk] || 0) + 1; }
     }
-    var buKeys = Object.keys(buMap);
+    var taskKeys = Object.keys(taskMap);
     var buColors2 = ['#7c6af7','#60a5fa','#3ecf8e','#fb923c','#f87171','#fbbf24','#c084fc','#2dd4bf','#f472b6','#34d399'];
-    if (!buKeys.length) {
-      buEl.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum bug registrado ainda.</p>';
+    if (!taskKeys.length) {
+      buEl.innerHTML = '<p style="font-size:13px;color:var(--text3);padding:8px 0">Nenhum bug vinculado a uma task ainda.</p>';
     } else {
-      var buTotal = allBugs2.length || 1;
+      var taskTotal = sprintBugs.length || 1;
       var bhtml = '';
-      for (var i = 0; i < buKeys.length; i++) {
-        var bPct = Math.round(buMap[buKeys[i]] / buTotal * 100);
+      for (var i = 0; i < taskKeys.length; i++) {
+        var bPct = Math.round(taskMap[taskKeys[i]] / taskTotal * 100);
         var bColor = buColors2[i % buColors2.length];
         bhtml +=
           '<div class="barrow">' +
-            '<span style="font-size:12px;color:var(--text2);width:160px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(buKeys[i]) + '">' + esc(buKeys[i]) + '</span>' +
+            '<span style="font-size:12px;color:var(--text2);min-width:200px;max-width:340px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(taskKeys[i]) + '">' + esc(taskKeys[i]) + '</span>' +
             '<div class="barbg"><div class="barfill" style="background:' + bColor + ';width:' + bPct + '%"></div></div>' +
-            '<span style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:' + bColor + ';min-width:60px;text-align:right">' + buMap[buKeys[i]] + ' <span style="font-size:10px;font-weight:400;color:var(--text3)">(' + bPct + '%)</span></span>' +
+            '<span style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:' + bColor + ';min-width:80px;text-align:right">' + taskMap[taskKeys[i]] + ' bug' + (taskMap[taskKeys[i]] > 1 ? 's' : '') + ' <span style="font-size:10px;font-weight:400;color:var(--text3)">(' + bPct + '%)</span></span>' +
           '</div>';
       }
       buEl.innerHTML = bhtml;
@@ -745,37 +805,45 @@ function updateDash() {
 
 function buildPreview() {
   var sprint = val('sprint-num') || '—';
-  var totalTasks = num('total-tasks'), testedTasks = num('tasks-tested');
-  var untestedTasks = totalTasks - testedTasks; if (untestedTasks < 0) untestedTasks = 0;
-  var pct = totalTasks > 0 ? Math.round(testedTasks / totalTasks * 100) : 0;
   var totalCases = getTotalCases();
   var st = sprintBugs.length, pt = prodBugs.length;
   var sf = cntStatus(sprintBugs,'Corrigido'), pf = cntStatus(prodBugs,'Corrigido');
-  var entregues = 0, transbordo = blockedRows.length;
-  for (var i = 0; i < taskCases.length; i++) {
-    if (taskCases[i].status === 'Done') entregues++;
-    else if (!taskCases[i].status || taskCases[i].status === 'Backlog') transbordo++;
-  }
 
   var taskLines = '';
   for (var i = 0; i < taskCases.length; i++) {
-    taskLines += '  • ' + (taskCases[i].name || '(sem nome)') + ' — ' + (taskCases[i].cases || 0) + ' casos — ' + taskCases[i].status + '\n';
+    var t = taskCases[i];
+    taskLines += '  • ' + (t.name || '(sem nome)') + ' — ' + (t.cases || 0) + ' casos — ' + (t.status||'—');
+    if (t.link) taskLines += ' — ' + t.link;
+    taskLines += '\n';
+    taskLines += '    Critérios de aceite: ' + (t.criteria||'—');
+    if (t.criteriaObs) taskLines += ' | Obs: ' + t.criteriaObs;
+    taskLines += '\n';
   }
   if (!taskLines) taskLines = '  Nenhuma task registrada.\n';
 
   var sbLines = '';
   for (var i = 0; i < sprintBugs.length; i++) {
     var b = sprintBugs[i];
-    sbLines += '  • [' + b.crit + '] ' + (b.bu||'—') + ' | ' + (b.func||'—') + ' | Resp: ' + (b.resp||'—') + ' | Cat: ' + (b.cat||'—') + ' | ' + b.status + '\n';
+    sbLines += '  • [' + b.crit + '] ' + (b.bu||'—') + ' | ' + (b.func||'—') + ' | Task: ' + (b.taskRef||'—') + ' | Resp: ' + (b.resp||'—') + ' | Cat: ' + (b.cat||'—') + ' | ' + b.status;
+    if (b.status === 'Cancelado' && b.cancelReason) sbLines += ' | Motivo: ' + b.cancelReason;
+    if (b.link) sbLines += '\n    🔗 ' + b.link;
+    sbLines += '\n';
   }
   if (!sbLines) sbLines = '  Nenhum bug registrado.\n';
 
   var pbLines = '';
   for (var i = 0; i < prodBugs.length; i++) {
     var b = prodBugs[i];
-    pbLines += '  • [' + b.crit + '] ' + (b.bu||'—') + ' | ' + (b.func||'—') + ' | Resp: ' + (b.resp||'—') + ' | Cat: ' + (b.cat||'—') + ' | ' + b.status + '\n';
+    pbLines += '  • [' + b.crit + '] ' + (b.bu||'—') + ' | ' + (b.func||'—') + ' | Resp: ' + (b.resp||'—') + ' | Cat: ' + (b.cat||'—') + ' | ' + b.status;
+    if (b.status === 'Cancelado' && b.cancelReason) pbLines += ' | Motivo: ' + b.cancelReason;
+    if (b.link) pbLines += '\n    🔗 ' + b.link;
+    pbLines += '\n';
   }
   if (!pbLines) pbLines = '  Nenhum incidente registrado.\n';
+
+  var rkLines = '';
+  for (var i = 0; i < riskRows.length; i++) rkLines += '  ⚠️  ' + (riskRows[i]||'—') + '\n';
+  if (!rkLines) rkLines = '  Nenhum risco registrado.\n';
 
   var blLines = '';
   for (var i = 0; i < blockedRows.length; i++) {
@@ -783,10 +851,6 @@ function buildPreview() {
     blLines += '  • ' + (r.item||'(sem item)') + ' | Motivo: ' + (r.motivo||'—') + ' | Risco: ' + (r.risco||'—') + '\n';
   }
   if (!blLines) blLines = '  Nenhuma task bloqueada.\n';
-
-  var rkLines = '';
-  for (var i = 0; i < riskRows.length; i++) rkLines += '  ⚠️  ' + (riskRows[i]||'—') + '\n';
-  if (!rkLines) rkLines = '  Nenhum risco registrado.\n';
 
   var imLines = '';
   for (var i = 0; i < improveRows.length; i++) imLines += '  💡 ' + (improveRows[i]||'—') + '\n';
@@ -800,12 +864,7 @@ function buildPreview() {
     'Time / Squad: ' + (val('squad')||'—') + '\n' +
     'Publicação: ' + (val('dt-pub')||'—') + '\n\n' +
     '━━━ RESUMO EXECUTIVO ━━━\n' + (val('exec-summary')||'—') + '\n\n' +
-    '━━━ MÉTRICAS DE TESTES ━━━\n' +
-    'Total de tasks planejadas: ' + totalTasks + '\n' +
-    'Tasks testadas: ' + testedTasks + '  |  Não testadas: ' + untestedTasks + '\n' +
-    'Cobertura: ' + pct + '%\n' +
-    'Justificativa: ' + (val('untested-reason')||'—') + '\n' +
-    'Tasks entregues: ' + entregues + '  |  Transbordadas: ' + transbordo + '\n' +
+    '━━━ CASOS DE TESTE ━━━\n' +
     'Total de casos de teste: ' + totalCases + '\n' +
     taskLines + '\n' +
     '━━━ BUGS DA SPRINT ━━━\n' +
@@ -816,7 +875,7 @@ function buildPreview() {
     'Total: ' + pt + '  |  Corrigidos: ' + pf + '\n' +
     '🔴 Crítico: ' + cntCrit(prodBugs,'Crítico') + '  🟠 Alto: ' + cntCrit(prodBugs,'Alto') + '  🟡 Médio: ' + cntCrit(prodBugs,'Médio') + '  🟢 Baixo: ' + cntCrit(prodBugs,'Baixo') + '\n' +
     pbLines + '\n' +
-    '━━━ TASKS NÃO TESTADAS / BLOQUEADAS ━━━\n' +
+    '━━━ TASKS BLOQUEADAS ━━━\n' +
     blLines + '\n' +
     '━━━ RISCOS E PONTOS DE ATENÇÃO ━━━\n' +
     rkLines + '\n' +
@@ -843,38 +902,32 @@ var LS_KEY = 'qa_review_data';
 
 function collectData() {
   return {
-    sprintNum:      val('sprint-num'),
-    qaResp:         val('qa-resp'),
-    squad:          val('squad'),
-    dtPub:          val('dt-pub'),
-    dtInicio:       val('dt-inicio'),
-    dtFim:          val('dt-fim'),
-    execSummary:    val('exec-summary'),
-    totalTasks:     val('total-tasks'),
-    tasksTested:    val('tasks-tested'),
-    untestedReason: val('untested-reason'),
-    taskCases:      taskCases,
-    sprintBugs:     sprintBugs,
-    prodBugs:       prodBugs,
-    blockedRows:    blockedRows,
-    riskRows:       riskRows,
-    improveRows:    improveRows
+    sprintNum:   val('sprint-num'),
+    qaResp:      val('qa-resp'),
+    squad:       val('squad'),
+    dtPub:       val('dt-pub'),
+    dtInicio:    val('dt-inicio'),
+    dtFim:       val('dt-fim'),
+    execSummary: val('exec-summary'),
+    taskCases:   taskCases,
+    sprintBugs:  sprintBugs,
+    prodBugs:    prodBugs,
+    blockedRows: blockedRows,
+    riskRows:    riskRows,
+    improveRows: improveRows
   };
 }
 
 function applyData(d) {
   if (!d) return;
   function setVal(id, v) { var e = document.getElementById(id); if (e && v !== undefined) e.value = v; }
-  setVal('sprint-num',     d.sprintNum);
-  setVal('qa-resp',        d.qaResp);
-  setVal('squad',          d.squad);
-  setVal('dt-pub',         d.dtPub);
-  setVal('dt-inicio',      d.dtInicio);
-  setVal('dt-fim',         d.dtFim);
-  setVal('exec-summary',   d.execSummary);
-  setVal('total-tasks',    d.totalTasks);
-  setVal('tasks-tested',   d.tasksTested);
-  setVal('untested-reason',d.untestedReason);
+  setVal('sprint-num',   d.sprintNum);
+  setVal('qa-resp',      d.qaResp);
+  setVal('squad',        d.squad);
+  setVal('dt-pub',       d.dtPub);
+  setVal('dt-inicio',    d.dtInicio);
+  setVal('dt-fim',       d.dtFim);
+  setVal('exec-summary', d.execSummary);
   if (Array.isArray(d.taskCases))   taskCases   = d.taskCases;
   if (Array.isArray(d.sprintBugs))  sprintBugs  = d.sprintBugs;
   if (Array.isArray(d.prodBugs))    prodBugs    = d.prodBugs;
@@ -882,7 +935,6 @@ function applyData(d) {
   if (Array.isArray(d.riskRows))    riskRows    = d.riskRows;
   if (Array.isArray(d.improveRows)) improveRows = d.improveRows;
   updateBar();
-  calcTasks();
   updateBugCounts();
   updateDash();
 }
@@ -954,7 +1006,5 @@ setTimeout(updateDash, 200);
 
 <!-- Toast notification -->
 <div id="toast" style="position:fixed;bottom:24px;right:24px;background:#1e1e24;border:1px solid rgba(124,106,247,.4);color:#a89cf8;padding:10px 18px;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;opacity:0;transform:translateY(10px);transition:all .3s;z-index:999;pointer-events:none;box-shadow:0 4px 24px rgba(0,0,0,.4)"></div>
-</body>
-</html>
 </body>
 </html>
